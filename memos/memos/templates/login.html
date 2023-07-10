@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+    <style>
+        .content-section a{
+            width:215px;
+            height: 41px;
+            display: block;
+            background:url('data:image/png;base64,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');
+            background-repeat: no-repeat
+        }
+    </style>
+    <div class="content-section">
+       <a id="loginlink" href='{{ auth_uri }}'></a>
+    </div>
+{% endblock content %}

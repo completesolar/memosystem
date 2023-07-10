@@ -1,0 +1,83 @@
+{% if memo.pinned %}
+<article class="media content-section bg-warning">
+{% else %}
+<article class="media content-section">
+  {% endif %}
+    <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + memo.user.image_file) }}">
+    <div class="media-body">
+      <div class="article-metadata">
+        <a class="mr-2" href="/memo/{{memo.user.username}}/{{ memo.number}}/{{memo.version}}?detail">{{ memo.user.username }}-{{memo.number}}{{ memo.version }}</a> 
+        <a class="mr-2" href="/memo/{{memo.user.username}}/{{ memo.number}}">{{ memo.user.username }}-{{memo.number}}</a>
+        {% if memo.memo_state.compare_short_name("Draft") == 1 %}
+        <small class="text-muted">{{ memo.action_date.strftime('%Y-%m-%d') }}</small>
+          <small class="text-primary">
+        {% elif memo.memo_state.compare_short_name("Signoff") %}
+        <small class="text-muted">{{ memo.action_date.strftime('%Y-%m-%d') }}</small>
+            <small class="text-primary">
+        {% elif memo.memo_state.compare_short_name("Active") %}
+        <small class="text-muted">{{ memo.action_date.strftime('%Y-%m-%d') }}</small>
+            <small class="text-success">
+        {% elif memo.memo_state.compare_short_name("Obsolete") %}
+        <small class="text-muted">{{ memo.action_date.strftime('%Y-%m-%d') }}</small>
+            <small class="text-danger">
+        {% endif %}
+        {{ memo.memo_state.short_name() }}</small>
+       
+        {% if memo.can_access(user,delegate) %}
+          {% for file in memo.files %}
+            <a class="mr-0" href="/file/memo/{{memo.user.username}}/{{memo.number}}/{{memo.version}}/{{file.uuid}}" target="_blank">{{loop.index0}}{% if loop.index0 < memo.files|length - 1 %},{% endif %}</a>
+          {% endfor %}
+
+          {% if user != None and memo.can_revise(delegate=user) %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.create_revise_submit',username=memo.user.username,memo_number=memo.number) }}">Revise</a>
+          {% endif %}
+       
+          {% if user != None and memo.can_sign(signer=user,delegate=delegate) %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.sign',username=memo.user.username,memo_number=memo.number,memo_version=memo.version,signer=user.username) }}">Sign</a>
+          {% endif %}
+
+          {% if user != None and memo.can_unsign(signer=user,delegate=delegate) %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.unsign',username=memo.user.username,memo_number=memo.number,memo_version=memo.version,signer=user.username) }}">Unsign</a>
+          {% endif %}        
+
+          {% if user != None and memo.can_obsolete(delegate=user) %}
+            <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.obsolete',username=memo.user.username,memo_number=memo.number,memo_version=memo.version,next_page=next_page,page=page) }}" onclick="return confirm('Are you sure you want to obsolete this memo?');">Obsolete</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_template(user) and not memo.template %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.template',memoref=memo,set=1) }}">Set Template</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_template(user) and memo.template %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.template',memoref=memo,unset=1) }}">Unset Template</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_pin(user) and not memo.pinned %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.pinned',memoref=memo,set=1) }}">Pin</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_pin(user) and memo.pinned %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.pinned',memoref=memo,unset=1) }}">Unpin</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_cancel(delegate=user) %}
+              <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.cancel',username=memo.user.username,memo_number=memo.number,memo_version=memo.version) }}">Cancel</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_cancel(delegate=user) %}
+            <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.create_revise_submit',username=memo.user.username,memo_number=memo.number,memo_version=memo.version) }}">Edit</a> 
+          {% endif %}
+
+          {% if user != None and memo.can_reject(signer=user,delegate=delegate) %}
+          <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('memos.reject',username=memo.user.username,memo_number=memo.number,memo_version=memo.version,signer=user.username) }}">Reject</a>
+          {% endif %}
+            </div>
+            <a class="article-title" href="/memo/{{memo.user.username}}/{{memo.number}}/{{memo.version}}?detail">{{ memo.title }}</a>
+          {% if detail == True %}
+          {% include 'memo_detail.html'%}
+          {% endif %}
+          {% else %}
+          Confidential
+        </div>
+        {% endif %}
+    </article>

@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+
+  <table class="table table-sm">
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">User</th>
+        <th scope="col">Reference</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in history.items %}
+      <tr>
+        <td>{{ item.date.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{item.user.username}}</td>
+        <td>        <a class="mr-2" href="/memo/{{item.memo_ref}}">{{item.memo_ref}}</a> </td>
+        <td>{{item.memo_activity}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+
+  {% for page_num in history.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if page_num %}
+      
+    {% if history.page == page_num %}
+        <a class="btn btn-info mb-4" href="{{ url_for(next_page, page=page_num,**url_params)}}">{{ page_num }}</a>
+      {% else %}
+        <a class="btn btn-outline-info mb-4" href="{{ url_for(next_page, page=page_num,**url_params)}}">{{ page_num }}</a>
+   {% endif %}
+
+    {% else %}
+      ...
+    {% endif %}
+    {% endfor %}
+{% endblock content %}

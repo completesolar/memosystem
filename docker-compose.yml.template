@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  memosystem:     # This container hosts the uwsgi & flask
+    build: ./memos
+    container_name: memosystem
+    restart: always
+    ports:
+      # if you are going to run flask without the uwsgi etc... then you need this port
+#      - 5000:5000
+      - 8086:80
+    volumes:
+    # Unfortunately the volume must be an absolute path to the
+    # memos.  This directory will hold the raw files + the meta jsons
+    # of the memos... and should be backed up
+      - /opt/memosystem/static:/app/memos/static
+      - /opt/memosystem/sqlite:/app/memos/sqlite
+    environment:
+      - CLIENT_ID=xxx
+      - CLIENT_SECRET=xxx
+      - AUTHORITY=xxx
+      - REDIRECT_PATH=xxx
+      - ENDPOINT=xxx
+      - SCOPE=xxx
+      - SESSION_TYPE=xxx
+      - ENV_URL=xxx
+      - SQLALCHEMY_DATABASE_URI=xxx
+
+  mysql:  # This container host the mysql instance.
+    image: mysql
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+    # You should change these passwords... and then
+    # type in the passwords into the file memos/memos/settings_local.py
+      MYSQL_ROOT_PASSWORD: "xxx"
+      MYSQL_DATABASE: "xxx"
+      MYSQL_USER: "xxx"
+      MYSQL_PASSWORD: "xxx"
+    ports:
+      - 3306:3306
+    volumes:
+    # you need to fix the hardcoded source path
+      - /opt/memosystem/mysql:/var/lib/mysql

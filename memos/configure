@@ -1,0 +1,216 @@
+#!/usr/bin/env python
+"""
+This file contains functions used to configure the memosystem.  Probably should only be run one time
+"""
+
+import sys
+import os
+import shutil
+
+try:
+    import settings_local
+except ImportError:
+    pass
+from flask import current_app
+from memos import db, create_app
+from memos.models.User import User
+from memos.models.Memo import Memo
+from memos.models.MemoSignature import MemoSignature
+from memos.models.MemoActivity import MemoActivity
+from memos.models.MemoHistory import MemoHistory
+from memos.models.MemoReference import MemoReference
+from memos.models.MemoSubscription import MemoSubscription
+from memos.models.MemoFile import MemoFile
+
+
+def reset_db():
+    for table in [MemoSignature, MemoActivity, MemoHistory, MemoReference, MemoSubscription, MemoFile, Memo, User]:
+        try:
+            table.__table__.drop(db.engine)
+        except:
+            print(f"{table} already dropped")
+
+
+def clear_static():
+    shutil.rmtree("memos/static", ignore_errors=True)
+
+
+def init_app():
+    app = create_app()
+    app.app_context().push()
+    db.init_app(app)
+
+
+def create_db():
+    # Create the database
+    db.create_all()
+
+
+def copy_static():
+    # Copy the files into the static folder
+    src = os.path.join("memos", "template_static_files")
+    dst = os.path.join("memos", "static")
+
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+    shutil.copytree(src, dst, dirs_exist_ok=True)
+
+
+def create_user(uepw=None):
+    if "LDAP_HOST" in os.environ:
+        print("Failed - you can only create users if not using LDAP/AD")
+        return ()
+
+    temp = uepw.split(":")
+    if len(temp) != 3:
+        print("String should be user:email:password")
+        return
+
+    username = temp[0]
+    email = temp[1]
+    password = temp[2]
+
+    print(f"User = {username} Email = {email} Password = {password}")
+
+    user = User(username=username, password=User.create_hash_pw(password), email=email)
+    db.session.add(user)
+    db.session.commit()
+
+
+def update_admin(username, admin):
+    if admin[0] == 't' or admin[0] == 'T':
+        admin = True
+    else:
+        admin = False
+
+    user = User.find(username=username)
+    if user is None:
+        print(f"User = {username} not found")
+    else:
+        user.admin = admin
+        db.session.add(user)
+        db.session.commit()
+        print(f"User {user} Admin={user.admin}")
+
+
+def update_readall(username, readall):
+    if readall[0] == 't' or readall[0] == 'T':
+        readall = True
+    else:
+        readall = False
+
+    user = User.find(username=username)
+    if user is None:
+        print(f"User = {username} not found")
+    else:
+        user.readAll = readall
+        db.session.add(user)
+        db.session.commit()
+        print(f"User {user} readall={user.readAll}")
+
+
+def update_password(username, password):
+    user = User.find(username=username)
+    if user is None:
+        print(f"User = {username} not found")
+    else:
+        user.password = User.create_hash_pw(password)
+        db.session.add(user)
+        db.session.commit()
+        print(f"User {user} password ={password} hash={user.password}")
+
+
+def print_usage():
+    print("-h --help                     : This help message")
+    print("--all -a                      : configure database & copyfiles")
+    print("-db --database                : configure database")
+    print("-s --static                   : copy static files")
+    print("-u user:email:pw              : create user ... user:email:pw")
+    print("-ad --admin user true|false   : Change the admin state of the user")
+    print("-ra --readall user true|false : Change the readall state of the user")
+    print("-p --password user pw         : Set the password for user")
+    print("--resetdb                     : reset database... better be SURE!")
+    print("--clear                       : clear memo files... better be SURE!")
+
+
+if __name__ == "__main__":
+
+    app = None
+    init_app()
+
+    args = sys.argv[1:]
+
+    if len(args) == 0 or "-h" in args or "--help" in args:
+        print_usage()
+        sys.exit()
+
+    if len(args) == 0 or "--all" in args or "-a" in args:
+        create_db()
+        copy_static()
+        sys.exit()
+
+    if "-db" in args or "--database" in args:
+        create_db()
+
+    if "-s" in args or "--static" in args:
+        copy_static()
+
+    if "-u" in args:
+        pos = args.index("-u")
+        if len(args) < pos or args[pos + 1][0] == "-":
+            print(f"pos = {pos} arg[pos]={args[pos]}")
+            print("Error in args")
+            sys.exit()
+
+        create_user(args[pos + 1])
+
+    if "-ad" in args or "--admin" in args:
+        try:
+            pos = args.index("-ad")
+        except ValueError:
+            pos = args.index("--admin")
+
+        if pos + 3 > len(args):
+            print_usage()
+            sys.exit()
+
+        if args[pos + 2] not in ["true", "false"]:
+            print_usage()
+            sys.exit()
+
+        update_admin(args[pos + 1], args[pos + 2])
+
+    if "-ra" in args or "--readall" in args:
+        try:
+            pos = args.index("-ra")
+        except ValueError:
+            pos = args.index("--readall")
+
+        if pos + 3 > len(args):
+            print_usage()
+            sys.exit()
+
+        if args[pos + 2] not in ["true", "false"]:
+            print_usage()
+            sys.exit()
+
+        update_readall(args[pos + 1], args[pos + 2])
+
+    if "-p" in args or "--password" in args:
+        try:
+            pos = args.index("-p")
+        except ValueError:
+            pos = args.index("--password")
+
+        if pos + 3 > len(args):
+            print_usage()
+            sys.exit()
+
+        update_password(args[pos + 1], args[pos + 2])
+
+    if "--resetdb" in args:
+        reset_db()
+        sys.exit()
+
+    if "--clear" in args:
+        clear_static()
