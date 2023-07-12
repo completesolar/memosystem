@@ -51,7 +51,7 @@ def get_a_token():
     if "error" in result:
         return render_template("auth_error.html", result=result)
     else:
-        user_name = auth.get_user().get("preferred_username").split('@')[0]  # username from the token
+        user_name = auth.get_user().get("preferred_username").split('@')[0].lower()  # username from the token
         user = User.query.filter_by(username=user_name).first()
 
         if user is None:
