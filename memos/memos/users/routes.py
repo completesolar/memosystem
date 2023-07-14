@@ -49,7 +49,7 @@ def login():
 def get_a_token():
     result = auth.complete_log_in(request.args)
     if "error" in result:
-        return render_template("auth_error.html", result=result)
+        return redirect(ENV_URL+"/logout")
     else:
         user_name = auth.get_user().get("preferred_username").split('@')[0].lower()  # username from the token
         user = User.query.filter_by(username=user_name).first()
