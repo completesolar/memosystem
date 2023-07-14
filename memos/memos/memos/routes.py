@@ -170,8 +170,8 @@ def create_revise_submit(username=None,memo_number=None):
             form.username.data = username
             form.memo_number.data = memo.number
             form.memo_version.data = memo.version
-
-            return render_template('create_memo.html', config=current_app.config,title=f'New Memo {memo}',form=form, legend=f'New Memo {memo}', user=owner, memo=memo)
+            env_url = os.getenv("ENV_URL")
+            return render_template('create_memo.html', config=current_app.config,title=f'New Memo {memo}',form=form, legend=f'New Memo {memo}', user=owner, memo=memo, env_url=env_url)
 
         # Everthing from here down is POST
 
@@ -217,9 +217,9 @@ def create_revise_submit(username=None,memo_number=None):
             # We are done saving changes
             flash(f'{memo} has been saved!', 'success')
             return redirect(url_for('memos.main'))
-
+        env_url = os.getenv("ENV_URL")
         return render_template('create_memo.html', config=current_app.config,title=f'New Memo {memo}',
-                            form=form, legend=f'New Memo {memo}', user=delegate, memo=memo)
+                            form=form, legend=f'New Memo {memo}', user=delegate, memo=memo, env_url=env_url)
 
 
 # bring up the list of all of the memos that the current user can sign
