@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="content-section">
-    <form method="POST" action="{{ env_url ~ url_for('memos.create_revise_submit', username=user.username, memo_number=memo.number) }}" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+    <form method="POST" action="{{ env_url ~ url_for('memos.create_revise_submit', username=user.username, memo_number=memo.number) }}" enctype="multipart/form-data">        {{ form.hidden_tag() }}
         <fieldset class="form-group">
             <legend class="border-bottom mb-4">{{ legend }}</legend>
             <div class="form-group">
