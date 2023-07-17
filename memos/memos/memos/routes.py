@@ -204,6 +204,7 @@ def create_revise_submit(username=None,memo_number=None):
                         file.remove_file(memo)
                         flash(f"Remove {file}",'success')
                         redirectUrl = request.url.replace('https://0.0.0.0:8086', os.getenv("ENV_URL"))
+                        redirectUrl = request.url.replace('https://0.0.0.0:8081', os.getenv("ENV_URL"))
                         return redirect(redirectUrl)  # redirect back to edit instead...
 
             if form.submit.data is True:
@@ -211,6 +212,7 @@ def create_revise_submit(username=None,memo_number=None):
                 if len(memo.files) < 1:
                     flash(f'Must have at least one file attached to Submit memo!', 'danger')
                     redirectUrl = request.url.replace('https://0.0.0.0:8086', os.getenv("ENV_URL"))
+                    redirectUrl = request.url.replace('https://0.0.0.0:8081', os.getenv("ENV_URL"))
                     return redirect(redirectUrl)  # redirect back to edit instead...
                 memo.process_state(acting=current_user)
                 flash(f'{memo} has been created!', 'success')
