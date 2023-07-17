@@ -134,5 +134,15 @@
             {{ form.cancel(class="btn btn-primary") }}
         </div>
     </form>
+    <script>
+        document.addEventListener("keypress", function(event) {
+        if (event.keyCode === 13 || event.which === 13) {
+            event.preventDefault();
+            alert("submit");
+            var submitButton = document.getElementById("submit");
+            submitButton.click();
+        }
+        });
+    </script>
 </div>
 {% endblock content %}
