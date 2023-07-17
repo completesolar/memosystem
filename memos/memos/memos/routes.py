@@ -175,7 +175,52 @@ def create_revise_submit(username=None,memo_number=None):
 
         # Everthing from here down is POST
 
-        return "asdf"
+        if form.validate_on_submit():
+            
+            memo.title = form.title.data
+            memo.distribution = form.distribution.data
+            memo.keywords = form.keywords.data
+            memo.signers = form.signers.data
+            memo.references = form.references.data
+            memo.confidential = form.confidential.data
+
+            process_file(memo,form.memodoc1)
+            process_file(memo,form.memodoc2)
+            process_file(memo,form.memodoc3)
+            process_file(memo,form.memodoc4)
+            process_file(memo,form.memodoc5)
+
+            # make a json backup
+            memo.save()
+
+            # Look and see if they pressed a remove button on one of the files.
+            for idx,file in enumerate(memo.files):
+                if hasattr(form,f'file_{idx}'):
+                    status = getattr(form,f'file_{idx}')
+                    if status.data is True:
+                        file.remove_file(memo)
+                        flash(f"Remove {file}",'success')
+                        #return redirect(request.url)  # redirect back to edit instead...
+                        return "redirect request.url line 204"+request.url
+            if form.submit.data is True:
+                # submit for sigantures
+                if len(memo.files) < 1:
+                    flash(f'Must have at least one file attached to Submit memo!', 'danger')
+                    #return redirect(request.url)  # redirect back to edit instead...
+                    return "redirect request.url line 210"+request.url
+                memo.process_state(acting=current_user)
+                flash(f'{memo} has been created!', 'success')
+                #return redirect(url_for('memos.main'))
+                return "redirect request.url line 213"+url_for('memos.main')
+            # We are done saving changes
+            flash(f'{memo} has been saved!', 'success')
+            return redirect(url_for('memos.main'))
+            return "redirect request.url line 217"+url_for('memos.main')
+
+        env_url = os.getenv("ENV_URL")
+        return render_template('create_memo.html', config=current_app.config,title=f'New Memo {memo}',
+                            form=form, legend=f'New Memo {memo}', user=delegate, memo=memo, env_url=env_url)
+
 
 # bring up the list of all of the memos that the current user can sign
 @memos.route("/inbox")
