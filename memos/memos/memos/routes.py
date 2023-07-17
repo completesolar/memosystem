@@ -177,7 +177,7 @@ def create_revise_submit(username=None,memo_number=None):
 
         if form.validate_on_submit():
             if form.cancel.data is True:
-                return redirect(url_for('memos.cancel',username=form.username.data,
+                return redirect(os.getenv("ENV_URL") + url_for('memos.cancel',username=form.username.data,
                                         memo_number=form.memo_number.data,memo_version=form.memo_version.data))
 
             memo.title = form.title.data
@@ -214,11 +214,11 @@ def create_revise_submit(username=None,memo_number=None):
                     return redirect(redirectUrl)  # redirect back to edit instead...
                 memo.process_state(acting=current_user)
                 flash(f'{memo} has been created!', 'success')
-                return redirect(url_for('memos.main'))
+                return redirect(os.getenv("ENV_URL") + url_for('memos.main'))
 
             # We are done saving changes
             flash(f'{memo} has been saved!', 'success')
-            return redirect(url_for('memos.main'))
+            return redirect(os.getenv("ENV_URL") + url_for('memos.main'))
 
         return render_template('create_memo.html', config=current_app.config,title=f'New Memo {memo}',
                             form=form, legend=f'New Memo {memo}', user=delegate, memo=memo)
