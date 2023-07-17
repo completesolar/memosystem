@@ -177,8 +177,9 @@ def create_revise_submit(username=None,memo_number=None):
 
         if form.validate_on_submit():
             if form.cancel.data is True:
-                #return redirect(url_for('memos.cancel',username=form.username.data,
-                #                        memo_number=form.memo_number.data,memo_version=form.memo_version.data))
+                env_url = os.getenv("ENV_URL")
+                return redirect(env_url + url_for('memos.cancel',username=form.username.data,
+                                        memo_number=form.memo_number.data,memo_version=form.memo_version.data))
 
             memo.title = form.title.data
             memo.distribution = form.distribution.data
