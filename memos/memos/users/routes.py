@@ -39,6 +39,7 @@ def login():
         print(auth.get_user())
         return redirect(url_for('main.home'))
     else:
+        session.pop('session', None)
         return render_template("login.html", **auth.log_in(
             scopes=SCOPE,
             redirect_uri=ENV_URL+"/getAToken",
