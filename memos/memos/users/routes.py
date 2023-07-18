@@ -39,6 +39,7 @@ def login():
         print(auth.get_user())
         return redirect(url_for('main.home'))
     else:
+        session.pop('session', None)
         return render_template("login.html", **auth.log_in(
             scopes=SCOPE,
             redirect_uri=ENV_URL+"/getAToken",
@@ -49,7 +50,8 @@ def login():
 def get_a_token():
     result = auth.complete_log_in(request.args)
     if "error" in result:
-        return result
+        session.pop('session', None)
+        return render_template("auth_error.html", result=result)
     else:
         user_name = auth.get_user().get("preferred_username").split('@')[0].lower()  # username from the token
         user = User.query.filter_by(username=user_name).first()
