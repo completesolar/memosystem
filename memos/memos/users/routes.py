@@ -53,14 +53,15 @@ def get_a_token():
         session.pop('session', None)
         return render_template("auth_error.html", result=result)
     else:
-        user_name = auth.get_user().get("preferred_username").split('@')[0].lower()  # username from the token
-        user = User.query.filter_by(username=user_name).first()
+        user_email = auth.get_user().get("preferred_username")
+        user = User.query.filter_by(email=user_email).first()
 
         if user is None:
             # Create the user and add to the database
+            user_name = user_email.split('@')[0].lower()
 
             user = User(username=user_name,
-                        email=auth.get_user().get("preferred_username"),
+                        email=user_email,
                         image_file='default.jpg',
                         password='0123456',
                         admin=0,
