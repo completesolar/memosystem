@@ -24,6 +24,10 @@ Flask-SimpleLDAP==1.4.0
 Flask-SQLAlchemy==2.5.1
 Flask-WTF==1.0.1
 greenlet==1.1.2
+oogle-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
 identity>=0.2,<0.3
 idna==3.3
 importlib-metadata==4.11.3
