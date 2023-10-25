@@ -1,6 +1,6 @@
 """ User Routes """
 import os
-from flask import render_template, url_for, flash, redirect, request, Blueprint, current_app, abort, session
+from flask import render_template, url_for, flash, redirect, request, Blueprint, current_app, abort, session, Flask
 from flask_login import login_user, current_user, logout_user, login_required
 from memos import db
 from memos.flask_sqlalchemy_txns import transaction
@@ -13,6 +13,15 @@ from memos.extensions import ldap
 
 import os
 import identity.web
+
+# Google Login imports
+import google_auth_oauthlib.flow
+import requests
+# debug
+from pprint import pprint
+
+# Uncomment for local testing http
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -31,7 +40,39 @@ auth = identity.web.Auth(
 )
 
 users = Blueprint('users', __name__)
+#Google Credentials
+users.secret_key = os.getenv("G_SECRET")
+CLIENT_ID = os.getenv("G_CLIENT_ID")
+CLIENT_SECRET = os.getenv("G_CLIENT_SECRET")
 
+REDIRECT_URI = os.getenv("G_REDIRECT_URI")
+# REDIRECT_URI = 'http://localhost:80/getAToken'
+SCOPES = ['openid','https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+# END Google Credentials
+
+# Google login flow.
+# Connect and validate credentials.
+# Get user token on success.
+@users.route("/sign_in")
+def sign_in():
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        {
+            "web": {
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [REDIRECT_URI]
+            }
+        }, SCOPES
+    )
+
+    flow.redirect_uri = REDIRECT_URI
+    authorization_url, _ = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true'
+    )
+    return redirect(authorization_url)
 
 @users.route("/login", methods=['GET'])
 def login():
@@ -48,25 +89,50 @@ def login():
 
 @users.route(REDIRECT_PATH)
 def get_a_token():
-    result = auth.complete_log_in(request.args)
-    if "error" in result:
-        session.pop('session', None)
-        return render_template("auth_error.html", result=result)
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        {
+            "web": {
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [REDIRECT_URI]
+            }
+        }, SCOPES
+    )
+
+    flow.redirect_uri = REDIRECT_URI
+    flow.fetch_token(authorization_response=request.url)
+
+    # Getting user's info
+    token = flow.credentials.token
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers).json()
+    pprint(response)
+
+    if not response:
+        return render_template("auth_error.html", result="Invalid Authentication, Validate information")
     else:
-        user_email = auth.get_user().get("preferred_username")
+        session['user'] = response['email']
+        # email from the token
+        user_email = response['email']
+
+        # Look up the user based on their email address
         user = User.query.filter_by(email=user_email).first()
 
         if user is None:
             # Create the user and add to the database
-            user_name = user_email.split('@')[0].lower()
+            user_name = user_email.split('@')[0].lower()  # username derived from the email
 
-            user = User(username=user_name,
-                        email=user_email,
-                        image_file='default.jpg',
-                        password='0123456',
-                        admin=0,
-                        readAll=0,
-                        pagesize=10)
+            user = User(
+                username=user_name,
+                email=user_email,
+                image_file='default.jpg',
+                password='0123456',
+                admin=0,
+                readAll=0,
+                pagesize=10
+            )
 
             db.session.add(user)
             db.session.commit()
