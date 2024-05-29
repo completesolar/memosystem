@@ -12,7 +12,7 @@ cryptography==37.0.2
 dill==0.3.4
 dnspython==2.2.1
 email-validator==1.2.1
-Flask==2.2
+Flask==2.2.5
 Flask-Bcrypt==1.0.1
 Flask-Bcrypt==1.0.1
 Flask-Login==0.6.2
