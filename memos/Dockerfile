@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     unixodbc-dev \
     unixodbc \
     libpq-dev \
+    default-mysql-client \
     vim
     
 # This block loads the drivers required to make pyodbc and microsoft sql server work

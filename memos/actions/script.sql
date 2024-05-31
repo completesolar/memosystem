@@ -19,7 +19,7 @@ UPDATE memo_subscription SET subscriber_id = @new_username WHERE subscriber_id =
 UPDATE memo_subscription SET subscription_id = @new_username WHERE subscription_id = @old_username;
 
 -- Update the _signers column in memo table
-UPDATE memo SET _signers = REPLACE(_signers, @old_username, @new_username) WHERE _signers LIKE CONCAT('%', @old_usernam>
+UPDATE memo SET _signers = REPLACE(_signers, @old_username, @new_username) WHERE _signers LIKE CONCAT('%', @old_username, '%');
 
 -- Update the distribution column in memo table
 UPDATE memo
