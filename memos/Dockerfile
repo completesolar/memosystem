@@ -33,7 +33,6 @@ ENV PATH "${APP}/env/bin:${APP}:${PATH}"
 
 # Install the dependencies
 RUN pip install -r requirements.txt
-RUN pip install mysqlclient
 
 ENV STATIC_PATH $APP/memos/static
 
