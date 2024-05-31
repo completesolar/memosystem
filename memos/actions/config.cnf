@@ -1,0 +1,5 @@
+[client]
+user=memosystem
+password=memopw
+host=mysql
+port=3306
