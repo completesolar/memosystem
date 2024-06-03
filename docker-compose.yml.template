@@ -18,13 +18,13 @@ services:
     environment:
       - CLIENT_ID=xxx
       - CLIENT_SECRET=xxx
-      - AUTHORITY=xxx
-      - REDIRECT_PATH=xxx
-      - ENDPOINT=xxx
+      - AUTHORITY=https://login.microsoftonline.com/{tenant}
+      - REDIRECT_PATH=/getAToken
+      - ENDPOINT=https://graph.microsoft.com/v1.0/users
       - SCOPE=xxx
       - SESSION_TYPE=xxx
       - ENV_URL=xxx
-      - SQLALCHEMY_DATABASE_URI=xxx
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://memosystem:memopw@mysql/memos
 
   mysql:  # This container host the mysql instance.
     image: mysql
@@ -35,9 +35,9 @@ services:
     # You should change these passwords... and then
     # type in the passwords into the file memos/memos/settings_local.py
       MYSQL_ROOT_PASSWORD: "xxx"
-      MYSQL_DATABASE: "xxx"
-      MYSQL_USER: "xxx"
-      MYSQL_PASSWORD: "xxx"
+      MYSQL_DATABASE: "memos"
+      MYSQL_USER: "memosystem"
+      MYSQL_PASSWORD: "memopw"
     ports:
       - 3306:3306
     volumes:

@@ -19,37 +19,32 @@ This document explains how to install and run the Memo System application on you
     `cd memosystem` 
     
 3.  Create the directory for storing memos and memo meta data.
-        
-    mkdir memo_files
+     
+    ```mkdir memo_files
     mkdir memo_files/static
+    mkdir memo_files/static/config
     mkdir memo_files/mysql
-    mkdir memo_files/sqlite
+    mkdir memo_files/sqlite```
     
-4.  Copy `/memosystem/memos/settings_local.py` to the new `config` directory.
+4.  Copy `memos/settings_local.py` to the new `config` directory.
     
-    `cp /memosystem/memos/settings_local.py /memo_files/static/config/settings_local.py` 
+    `cp memos/settings_local.py memo_files/static/config/settings_local.py`
     
-5.  Navigate to the root of the project.
-    
-    bashCopy code
-    
-    `cd ..` 
-    
-6.  Run the following command to build and start the containers:
+5. Run the following command to build and start the containers:
     
     `docker-compose up -d` 
     
-7.  Verify that the containers are running with the following command:
+6. Verify that the containers are running with the following command:
     
     `docker-compose ps` 
     
     This should show a list of running containers including `memosystem` and `mysql`.
     
-8.  Once the containers are up and running, create the database tables by running the following command:
+7. Once the containers are up and running, create the database tables by running the following command:
  
-    `cat /memosystem/memos/db_dump.sql | docker exec -i mysql /usr/bin/mysql -u root --password=test123 memos` 
+    `cat memos/db_dump.sql | docker exec -i mysql /usr/bin/mysql -u memosystem --password=memopw memos` 
     
-9.  Access the Memo System application by navigating to `http://localhost` in your web browser.
+8. Access the Memo System application by navigating to [http://localhost:8086](http://localhost:8086) in your web browser.
     
 
 ## Notes
