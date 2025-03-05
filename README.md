@@ -7,12 +7,13 @@ This document explains how to install and run the Memo System application on you
 
 -   Docker installed on your machine.
 -   Git installed on your machine.
+-   Use Git bash terminal to execute below commands in windows
 
 ## Installation
 
 1.  Clone the Memo System repository from Github.
  
-    `git clone https://github.com/plaris-solar/memosystem.git` 
+    `git clone https://github.com/completesolar/memosystem.git` 
     
 2.  Navigate into the cloned repository.
         
@@ -20,32 +21,45 @@ This document explains how to install and run the Memo System application on you
     
 3.  Create the directory for storing memos and memo meta data.
      
-    ```mkdir memo_files
-    mkdir memo_files/static
-    mkdir memo_files/static/config
-    mkdir memo_files/mysql
-    mkdir memo_files/sqlite```
+    `mkdir -p memo_files/static/config memo_files/mysql memo_files/sqlite`
     
 4.  Copy `memos/settings_local.py` to the new `config` directory.
     
     `cp memos/settings_local.py memo_files/static/config/settings_local.py`
+
+5.  Copy `memos/memos/template_static_files` content to the `memo_files/static`
+
+    `cp -r memos/memos/template_static_files/* memo_files/static/`
+
+6. Copy `docker-compose.yml.template` content to `docker-compose.yml` and update secrets, paths etc
     
-5. Run the following command to build and start the containers:
+    `cp docker-compose.yml.template docker-compose.yml`    
+
+7. Run the following command to build and start the containers:
     
     `docker-compose up -d` 
     
-6. Verify that the containers are running with the following command:
+8. Verify that the containers are running with the following command:
     
     `docker-compose ps` 
     
     This should show a list of running containers including `memosystem` and `mysql`.
     
-7. Once the containers are up and running, create the database tables by running the following command:
+9. This command needs to be executed through powershell on windows
+    Once the containers are up and running, create the database tables by running the following command:
  
-    `cat memos/db_dump.sql | docker exec -i mysql /usr/bin/mysql -u memosystem --password=memopw memos` 
+    `cat memos/db_dump.sql | docker exec -i mysql /usr/bin/mysql -h localhost -u memosystem --password=memopw memos` 
     
-8. Access the Memo System application by navigating to [http://localhost:8086](http://localhost:8086) in your web browser.
-    
+10. Access the Memo System application by navigating to [http://localhost:8086](http://localhost:8086) in your web browser.
+
+11. Screenshot shows how UI will look once loggedin using microsoft sso login
+    ![alt text](image.png)
+
+12. You can connect to database through mysql workbench using below details
+    Hostname: localhost
+    Port: 3306
+    Username: memosystem
+    Password: memopw    
 
 ## Notes
 
