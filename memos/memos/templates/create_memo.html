@@ -5,7 +5,8 @@
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
             <legend class="border-bottom mb-4">{{ legend }}</legend>
-            <div class="form-group">
+               <!-- Memo Title -->
+               <div class="form-group" id="memo-title-group">
                 {{ form.title.label(class="form-control-label") }}
                 {% if form.title.errors %}
                     {{ form.title(class="form-control form-control-lg is-invalid") }}
@@ -15,7 +16,7 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    {{ form.title(class="form-control form-control-lg") }}
+                    {{ form.title(class="form-control form-control-lg", id="memo-title") }}
                 {% endif %}
             </div>
 
@@ -75,17 +76,19 @@
                     {{ form.references(class="form-control form-control-lg") }}
                 {% endif %}
             </div>
-
-
             <div>
             {% for i in memo.files %}
                 {{ form.getField('file_' ~ ((loop.index-1)|string))(class="btn btn-outline-info") }}   {{i.filename}}<br>
             {% endfor %}
             </div>
 
-            <div class="form-check">
-                {{form.confidential.label}}
-                {{form.confidential(checked=False)}}
+            <!-- Confidential Checkbox with JS Alert -->
+            <div class="form-check mb-3">
+                {{ form.confidential.label }}
+                {{ form.confidential(id="confidential-checkbox") }}
+                <small id="confidential-warning" class="text-danger font-weight-bold d-none">
+                    ⚠️ Only users listed in distribution will have access to this confidential memo.
+                </small>
             </div>
             <div class="form-group">
                 {{ form.memodoc1(class="form-control-file") }}
@@ -128,6 +131,7 @@
                 {% endif %}
             </div>
         </fieldset>
+          <!-- Form Buttons -->
         <div class="form-group">
             {{ form.submit(class="btn btn-primary") }}
             {{ form.save(class="btn btn-primary") }}
@@ -135,4 +139,21 @@
         </div>
     </form>
 </div>
+<!-- Add JS for Confidential Warning -->
+<script>
+    const checkbox = document.getElementById("confidential-checkbox");
+    const warningText = document.getElementById("confidential-warning");
+    const memoTitle = document.getElementById("memo-title");
+
+    checkbox.addEventListener("change", function () {
+        if (this.checked) {
+            alert("You’ve selected 'Confidential'. Only users listed in the distribution will have access to this memo. Please double-check.");
+            warningText.classList.remove("d-none");
+            memoTitle.classList.add("text-danger");
+        } else {
+            warningText.classList.add("d-none");
+            memoTitle.classList.remove("text-danger");
+        }
+    });
+</script>
 {% endblock content %}
