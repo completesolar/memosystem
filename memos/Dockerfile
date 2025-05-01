@@ -39,5 +39,3 @@ RUN pip install -r requirements.txt
 RUN pip install mysqlclient
 
 ENV STATIC_PATH $APP/memos/static
-
-
