@@ -19,7 +19,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 AUTHORITY = os.getenv("AUTHORITY")
 REDIRECT_PATH = os.getenv("REDIRECT_PATH")
 ENDPOINT =  os.getenv("ENDPOINT")
-SCOPE = os.getenv("SCOPE")
+SCOPE = os.getenv("SCOPE", "").split()
 SESSION_TYPE = os.getenv("SESSION_TYPE")
 ENV_URL = os.getenv("ENV_URL")
 
