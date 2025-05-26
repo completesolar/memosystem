@@ -542,7 +542,9 @@ class Memo(db.Model):
         if owner.is_delegate(delegate) != True:
             return None
 
-        memo = Memo.query.filter(Memo.user_id==owner.username,Memo.number==memo_number).order_by(Memo.version.desc()).first()
+        memos = Memo.query.filter(Memo.user_id == owner.username,Memo.number == memo_number).all()
+        # Proper version sort
+        memo = sorted(memos, key=lambda m: rev_to_b10(m.version), reverse=True)[0] if memos else None
  
         # create a new memo (i.e. not a new version of an existing memo)
         if memo_number == None or memo==None:

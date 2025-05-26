@@ -1,9 +1,9 @@
 from datetime import datetime
-
 from memos import db
 from memos.models.User import User
 from memos.models.MemoActivity import MemoActivity
 from flask import current_app
+from flask_login import current_user
 
 class MemoHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,10 +16,12 @@ class MemoHistory(db.Model):
 
     @staticmethod
     def activity(memo=None,memo_activity=None,user=None):
-        if user==None:
-            userid =  '0'
-        else:
+        if user is not None:
             userid = user.username
+        elif current_user.is_authenticated:
+            userid = current_user.username
+        else:
+            userid = '0' # or 'system ' But you should first create the default user system; then this system will work.
         current_app.logger.info(f"activity={memo_activity} memo={memo} memoid={memo.id} user={user}")
    
         if memo_activity != MemoActivity.Cancel:
