@@ -19,7 +19,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 AUTHORITY = os.getenv("AUTHORITY")
 REDIRECT_PATH = os.getenv("REDIRECT_PATH")
 ENDPOINT =  os.getenv("ENDPOINT")
-SCOPE = os.getenv("SCOPE")
+SCOPE = os.getenv("SCOPE", "").split()
 SESSION_TYPE = os.getenv("SESSION_TYPE")
 ENV_URL = os.getenv("ENV_URL")
 
@@ -32,19 +32,20 @@ auth = identity.web.Auth(
 
 users = Blueprint('users', __name__)
 
-
 @users.route("/login", methods=['GET'])
 def login():
     if auth.get_user():
-        print(auth.get_user())
         return redirect(url_for('main.home'))
     else:
+        #Save the original URL the user was trying to access
+        next_url = request.args.get('next') or request.referrer or url_for('main.home')
+        session['next_url'] = next_url
+
         session.pop('session', None)
         return render_template("login.html", **auth.log_in(
             scopes=SCOPE,
-            redirect_uri=ENV_URL+"/getAToken",
+            redirect_uri=ENV_URL + "/getAToken",
         ))
-
 
 @users.route(REDIRECT_PATH)
 def get_a_token():
@@ -52,30 +53,27 @@ def get_a_token():
     if "error" in result:
         session.pop('session', None)
         return render_template("auth_error.html", result=result)
-    else:
-        user_email = auth.get_user().get("preferred_username")
-        user = User.query.filter_by(email=user_email).first()
 
-        if user is None:
-            # Create the user and add to the database
-            user_name = user_email.split('@')[0].lower()
+    user_email = auth.get_user().get("preferred_username")
+    user = User.query.filter_by(email=user_email).first()
 
-            user = User(username=user_name,
-                        email=user_email,
-                        image_file='default.jpg',
-                        password='0123456',
-                        admin=0,
-                        readAll=0,
-                        pagesize=10)
+    if user is None:
+        user_name = user_email.split('@')[0].lower()
+        user = User(username=user_name,
+                    email=user_email,
+                    image_file='default.jpg',
+                    password='0123456',
+                    admin=0,
+                    readAll=0,
+                    pagesize=10)
+        db.session.add(user)
+        db.session.commit()
 
-            db.session.add(user)
-            db.session.commit()
+    login_user(user)
 
-        # Regardless of whether the user was just created or already existed, log them in
-        login_user(user)
-
-    return redirect(url_for("main.home"))  # Changed from "index" to "main.home"
-
+    #Redirect to originally requested URL if it exists
+    next_url = session.pop('next_url', None)
+    return redirect(next_url or url_for("main.home"))
 
 @users.route("/logout")
 def logout():
