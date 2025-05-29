@@ -47,33 +47,42 @@ def login():
             redirect_uri=ENV_URL + "/getAToken",
         ))
 
+
 @users.route(REDIRECT_PATH)
 def get_a_token():
     result = auth.complete_log_in(request.args)
     if "error" in result:
         session.pop('session', None)
         return render_template("auth_error.html", result=result)
+    else:
+        user_info = auth.get_user()
+        display_name = user_info.get("name")  # "DWM - David McGuire"
+        user_email = user_info.get("preferred_username")
+        user = User.query.filter_by(email=user_email).first()
 
-    user_email = auth.get_user().get("preferred_username")
-    user = User.query.filter_by(email=user_email).first()
+        if user is None:
+        # Extract initials from display name or email for username
+            if display_name and " - " in display_name:
+                initials = display_name.split(" - ")[0].strip().upper() # e.g., "DWM"
+            else:
+                initials = user_email.split('@')[0].lower()
 
-    if user is None:
-        user_name = user_email.split('@')[0].lower()
-        user = User(username=user_name,
-                    email=user_email,
-                    image_file='default.jpg',
-                    password='0123456',
-                    admin=0,
-                    readAll=0,
-                    pagesize=10)
-        db.session.add(user)
-        db.session.commit()
+            user = User(username=initials,
+                        email=user_email,
+                        image_file='default.jpg',
+                        password='0123456',
+                        admin=0,
+                        readAll=0,
+                        pagesize=10)
 
-    login_user(user)
+            db.session.add(user)
+            db.session.commit()
 
-    #Redirect to originally requested URL if it exists
-    next_url = session.pop('next_url', None)
-    return redirect(next_url or url_for("main.home"))
+        # Regardless of whether the user was just created or already existed, log them in
+        login_user(user)
+
+    return redirect(url_for("main.home"))  # Changed from "index" to "main.home"
+
 
 @users.route("/logout")
 def logout():
