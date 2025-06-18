@@ -179,6 +179,12 @@ def create_revise_submit(username=None,memo_number=None):
             if form.cancel.data is True:
                 return redirect(os.getenv("ENV_URL") + url_for('memos.cancel',username=form.username.data,
                                         memo_number=form.memo_number.data,memo_version=form.memo_version.data))
+            
+            # Check if signers field is empty
+            if not form.signers.data:
+                flash("Please enter the initials for your Supervisor in the Signers field.", 'danger')
+                return render_template('create_memo.html', config=current_app.config, title=f'New Memo {memo}',
+                                       form=form, legend=f'New Memo {memo}', user=delegate, memo=memo)
 
             memo.title = form.title.data
             memo.distribution = form.distribution.data
