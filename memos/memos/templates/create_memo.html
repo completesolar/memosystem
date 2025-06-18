@@ -48,17 +48,23 @@
             </div>
 
 
+            <!-- Signers Field -->
             <div class="form-group">
                 {{ form.signers.label(class="form-control-label") }}
                 {% if form.signers.errors %}
-                    {{ form.signers(class="form-control form-control-lg is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.signers.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
+                {{ form.signers(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.signers.errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
                 {% else %}
-                    {{ form.signers(class="form-control form-control-lg") }}
+                {{ form.signers(class="form-control form-control-lg") }}
+                {% endif %}
+                {% if not form.signers.data %}
+                <div class="invalid-feedback">
+                    <span>Please enter the initials for your Supervisor in the Signers field.</span>
+                </div>
                 {% endif %}
             </div>
 
