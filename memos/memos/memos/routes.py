@@ -1,9 +1,13 @@
 """
 Memo Routes
 """
+import csv
+from datetime import datetime
+from io import StringIO
 import os
 import re
-from flask import (render_template, url_for, flash,current_app,
+from memos import db
+from flask import (make_response, render_template, url_for, flash,current_app,
                    redirect, request, abort, Blueprint, send_from_directory)
 from flask_login import current_user, login_required
 from wtforms import SubmitField
@@ -11,7 +15,7 @@ from memos.flask_sqlalchemy_txns import transaction
 
 from memos.models.MemoHistory import MemoHistory
 from memos.models.User import User
-from memos.memos.forms import MemoForm, MemoSearch
+from memos.memos.forms import MemoForm, MemoReportForm, MemoSearch
 from memos.models.Memo import Memo
 from memos.models.MemoFile import MemoFile
 from memos.models.MemoActivity import MemoActivity
@@ -534,7 +538,88 @@ def search():
 
         return render_template('memo_search.html', config=current_app.config,title='Memo Search ',legend='Search',form=form)
 
+@memos.route("/report", methods=["GET", "POST"])
+@login_required
+def report():
+    """CSV Export for Memo Report between start and end date"""
 
+    form = MemoReportForm()
+
+    with transaction():
+        if form.validate_on_submit():
+            start_date = form.start_date.data
+            end_date = form.end_date.data
+
+            # Optional: check date logic
+            if end_date < start_date:
+                flash("End date must be after start date.", "danger")
+                return render_template(
+                    "memo_report.html",
+                    config=current_app.config,
+                    title="Memo Report",
+                    form=form,
+                    legend="Export Memo Report"
+                )
+
+            query = """
+                SELECT
+                    m.id AS memo_id,
+                    m.user_id AS submitted_by,
+                    m.submit_date,
+                    ms.signer_id AS approved_by,
+                    ms.date_signed,
+                    m.memo_state,
+                    CASE 
+                        WHEN ms.date_signed IS NULL AND m.submit_date IS NOT NULL 
+                        THEN DATEDIFF(NOW(), m.submit_date)
+                        ELSE NULL
+                    END AS days_waiting_for_approval
+                FROM memo m
+                LEFT JOIN memo_signature ms ON m.id = ms.memo_id
+                WHERE m.submit_date BETWEEN :start_date AND :end_date
+                ORDER BY m.submit_date DESC
+            """
+
+            result = db.session.execute(
+                db.text(query), {"start_date": start_date, "end_date": end_date}
+            ).fetchall()
+
+            # Generate CSV in memory
+            si = StringIO()
+            writer = csv.writer(si)
+            writer.writerow([
+                "Memo ID", "Submitted By", "Submit Date", "Approved By",
+                "Date Signed", "Memo State", "Days Waiting for Approval",
+                "Extracted At", "Extracted By"
+            ])
+            extracted_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            for row in result:
+                writer.writerow([
+                    row.memo_id, row.submitted_by, row.submit_date,
+                    row.approved_by, row.date_signed, row.memo_state,
+                    row.days_waiting_for_approval, extracted_at, current_user.username
+                ])
+
+            # Send the CSV file as a download
+            response = make_response(si.getvalue())
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename=memo_report_{start_date}_to_{end_date}.csv"
+            )
+            response.headers["Content-type"] = "text/csv"
+            return response
+
+        # For GET or invalid POST (or failed validation)
+        if form.errors:
+            current_app.logger.warning(f"Form validation failed: {form.errors}")
+
+        return render_template(
+            "memo_report.html",
+            config=current_app.config,
+            title="Memo Report",
+            form=form,
+            legend="Export Memo Report"
+        )
+    
 @memos.route("/history")
 @login_required
 def history():
