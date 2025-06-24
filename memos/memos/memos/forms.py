@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired,ValidationError
 from memos.models.User import User
 from memos.models.User import User
 from memos.models.Memo import Memo
+from wtforms.fields import DateField
 from memos.models.MemoFile import MemoFile
 from memos.models.MemoSignature import MemoSignature
 from flask import current_app
@@ -54,3 +55,8 @@ class MemoSearch(FlaskForm):
     username = StringField('User')
     inbox = StringField('Inbox')
     search = SubmitField('Search')
+
+class MemoReportForm(FlaskForm):
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
+    submit = SubmitField('Export CSV')
